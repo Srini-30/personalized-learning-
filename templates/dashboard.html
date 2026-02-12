@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Dashboard | AI Study Buddy</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="page">
+
+<header style="display:flex; justify-content: space-between; align-items:center;">
+
+<div>
+<h1>AI Study Buddy Dashboard</h1>
+<p>Welcome, <b>{{ user }}</b></p>
+</div>
+
+<a href="/logout" class="btn-secondary">Logout</a>
+
+</header>
+
+
+
+<!-- LEARNING MODES -->
+<section class="card" style="text-align:center;">
+<h2>Choose a Mode to Learn</h2>
+
+<div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+
+<a href="{{ url_for('youtube_page') }}" class="choice-btn">
+ YouTube → Content Notes
+<span>Generate notes + quiz</span>
+</a>
+
+<a href="{{ url_for('topic_page') }}" class="choice-btn">
+ Topic → Content Notes
+<span>Learn anything instantly</span>
+</a>
+
+</div>
+</section>
+
+
+<!-- QUIZ HISTORY -->
+<a href="/quiz_history" style="text-decoration:none; color:inherit;">
+<section class="card" style="cursor:pointer;">
+<h2>Your Quiz Scorecard →</h2>
+<p>Click to view detailed results</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube to Notes | AI Study Buddy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="page">
+    <header style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div>
+        <h1>YouTube to Simplified Notes</h1>
+        <p class="small">
+          Paste a YouTube link and get transcript plus beginner, intermediate, and advanced notes.
+          <a href="{{ url_for('topic_page') }}" class="small">Go to Topic to Notes</a>
+        </p>
+      </div>
+      <a href="{{ url_for('dashboard') }}" class="btn-secondary">Back</a>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Process YouTube Lesson</h2>
+      </div>
+
+      <form id="yt-form">
+        <label for="yt-url">YouTube URL</label>
+        <input
+          id="yt-url"
+          type="text"
+          placeholder="https://youtu.be/HCDVN7DCzYE"
+          required
+        />
+        <button id="yt-submit" type="submit">Process Video</button>
+        <div id="yt-status" class="status"></div>
+      </form>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-title">Transcript</div>
+        <div id="transcript" class="notes-pane"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-title-row">
+          <span class="section-title">Notes by Level</span>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn active" id="tab-beginner">Beginner</button>
+            <button type="button" class="tab-btn" id="tab-intermediate">Intermediate</button>
+            <button type="button" class="tab-btn" id="tab-advanced">Advanced</button>
+          </div>
+        </div>
+
+        <div class="download-row">
+          <span class="small">Download notes:</span>
+          <div class="download-buttons">
+            <button type="button" id="download-beginner" class="btn-secondary">Download Beginner</button>
+            <button type="button" id="download-intermediate" class="btn-secondary">Download Intermediate</button>
+            <button type="button" id="download-advanced" class="btn-secondary">Download Advanced</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="notes-container">
+          <div id="notes-beginner" class="notes-pane"></div>
+          <div id="notes-intermediate" class="notes-pane hidden"></div>
+          <div id="notes-advanced" class="notes-pane hidden"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="quiz-cta">
+    <button type="button" id="quizBtn" style="display:none;">Take Quiz</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='youtube.js') }}"></script>
+</body>
+</html>

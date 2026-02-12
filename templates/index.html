@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Study Buddy Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>AI Study Buddy Dashboard</h1>
+      <p>
+        Convert YouTube videos to transcripts and multi-level notes using Whisper + Gemini,
+        or generate one-page educational content for any topic.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: YouTube → Notes -->
+      <section class="card">
+        <div class="card-header">
+          <h2>YouTube → Transcript & Notes</h2>
+          <span class="badge">POST /api/process_youtube</span>
+        </div>
+
+        <form id="yt-form">
+          <label for="yt-url">YouTube URL</label>
+          <input
+            id="yt-url"
+            type="text"
+            placeholder="https://youtu.be/HCDVN7DCzYE"
+            required
+          />
+          <div class="small">
+            Flow: <b>yt-dlp → ffmpeg → faster-whisper → Gemini (Beginner / Intermediate / Advanced)</b>
+          </div>
+          <button id="yt-submit" type="submit">
+            🔊 Process Video
+          </button>
+          <div id="yt-status" class="status"></div>
+        </form>
+
+        <div class="divider"></div>
+
+        <!-- Transcript + Download -->
+        <div>
+          <div class="section-title-row">
+            <span class="section-title">Transcript</span>
+            <button id="download-transcript" class="btn-secondary">⬇ Save Transcript</button>
+          </div>
+          <div id="transcript" class="mono">
+            <!-- transcript text will appear here -->
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Notes Tabs + Download -->
+        <div>
+          <div class="section-title-row">
+            <span class="section-title">Notes (Levels)</span>
+            <div class="tab-bar">
+              <button class="tab-btn active" id="tab-beginner">Beginner</button>
+              <button class="tab-btn" id="tab-intermediate">Intermediate</button>
+              <button class="tab-btn" id="tab-advanced">Advanced</button>
+            </div>
+          </div>
+
+          <div class="download-row">
+            <span class="small">Download notes:</span>
+            <div class="download-buttons">
+              <button id="download-beginner" class="btn-secondary">⬇ Beginner</button>
+              <button id="download-intermediate" class="btn-secondary">⬇ Intermediate</button>
+              <button id="download-advanced" class="btn-secondary">⬇ Advanced</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div id="notes-container">
+            <div id="notes-beginner" class="notes-pane">
+              (Run a video first to see beginner-friendly notes.)
+            </div>
+
+            <div id="notes-intermediate" class="notes-pane hidden">
+              (Intermediate-level notes will appear here.)
+            </div>
+
+            <div id="notes-advanced" class="notes-pane hidden">
+              (Advanced-level notes will appear here.)
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Educational Content -->
+      <section class="card">
+        <div class="card-header">
+          <h2>One-Page Educational Content</h2>
+          <span class="badge">POST /api/educational_content</span>
+        </div>
+
+        <form id="edu-form">
+          <label for="edu-topic">Topic</label>
+          <input
+            id="edu-topic"
+            type="text"
+            placeholder="starch, DNS, Bayesian networks..."
+            required
+          />
+
+          <label for="edu-level" style="margin-top: 8px;">Level</label>
+          <select id="edu-level">
+            <option value="beginner">Beginner (school level)</option>
+            <option value="intermediate">Intermediate (college)</option>
+            <option value="advanced">Advanced (MSc / PhD style)</option>
+          </select>
+
+          <button id="edu-submit" type="submit">
+            📄 Generate Content
+          </button>
+          <div id="edu-status" class="status"></div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="section-title-row">
+          <span class="section-title">Summary & Notes</span>
+          <button id="download-edu" class="btn-secondary">⬇ Save Content</button>
+        </div>
+
+        <div id="edu-output">
+          <div class="section-title">Summary</div>
+          <div id="edu-summary" class="small">
+            (Your summary will appear here.)
+          </div>
+
+          <div class="section-title">Key Points</div>
+          <ul id="edu-bullets"></ul>
+
+          <div class="section-title">Definitions</div>
+          <ul id="edu-definitions"></ul>
+
+          <div class="section-title">Examples</div>
+          <div id="edu-examples"></div>
+
+          <div class="section-title">Quiz</div>
+          <div id="edu-quiz"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

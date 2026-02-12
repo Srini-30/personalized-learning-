@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login | AI Study Buddy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="page auth-page">
+    <section class="card auth-card">
+      <h1 style="margin-bottom: 0.5rem;">Login</h1>
+      <p class="small" style="margin-bottom: 1rem;">
+        SIGN IN
+      </p>
+
+      {% if error %}
+      <div class="status err" style="margin-bottom: 8px;">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          placeholder="student"
+          required
+        />
+
+        <label for="password" style="margin-top: 8px;">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          required
+        />
+
+        <button type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">
+          Login
+        </button>
+      </form>
+
+      <div class="small" style="margin-top: 12px; text-align:center;">
+        <br />
+        <span style="display:block; margin-top:6px;">
+          New here?
+          <a href="{{ url_for('register') }}">Create an account</a>
+        </span>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

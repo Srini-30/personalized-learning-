@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Quiz History</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="page">
+
+<header class="page-header">
+
+<a href="/dashboard" class="back-btn">
+← Back
+</a>
+
+<div>
+<h1>Quiz Performance</h1>
+<p>User: <b>{{ user }}</b></p>
+</div>
+
+</header>
+
+<section class="card">
+
+{% if quiz_scores %}
+
+<table class="quiz-table">
+
+<thead>
+<tr>
+<th>S.NO</th>
+<th>Topic</th>
+<th>Score</th>
+<th>Percentage</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for s in quiz_scores %}
+
+<tr>
+<td>{{ loop.index }}</td>
+
+<td>{{ s.topic }}</td>
+
+<td class="center">
+<b>{{ s.score }}/{{ s.total }}</b>
+</td>
+
+<td class="center">
+{{ ((s.score / s.total) * 100) | round(0) }}%
+</td>
+
+<td class="center">
+{{ s.date }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+{% else %}
+
+<h3>No quizzes taken yet.</h3>
+
+{% endif %}
+
+</section>
+
+
+</div>
+
+</body>
+</html>

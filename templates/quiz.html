@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz</title>
+    <style>
+        body {
+            background: #0b132b;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 40px;
+        }
+        .card {
+            background: #111c44;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #22c55e;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        ul {
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Quiz</h1>
+<a href="/dashboard">
+    <button type="button" style="margin-bottom:20px;">Return to Dashboard</button>
+</a>
+
+<div id="quiz">
+{% for q in quiz %}
+{% set q_index = loop.index0 %}
+<div class="card">
+    <h3>{{ q.question }}</h3>
+    {% for option in q.options %}
+        <label>
+            <input type="radio" name="q{{ q_index }}" value="{{ option }}">
+            {{ option }}
+        </label>
+        <br>
+    {% endfor %}
+</div>
+{% endfor %}
+</div>
+
+<button type="button" onclick="submitQuiz()">Submit Quiz</button>
+<h2 id="result"></h2>
+<div id="focused-box" class="card" style="display:none;"></div>
+
+<script>
+async function submitQuiz() {
+    let answers = [];
+    const total = {{ quiz|length }};
+
+    for (let i = 0; i < total; i++) {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (!selected) {
+            alert("Please answer all questions!");
+            return;
+        }
+        answers.push(selected.value);
+    }
+
+    const res = await fetch("/submit_quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers })
+    });
+
+    const data = await res.json();
+    const resultEl = document.getElementById("result");
+    const focusedBox = document.getElementById("focused-box");
+
+    resultEl.innerHTML = `Score: ${data.score} / ${data.total} (${data.percentage || 0}%)`;
+
+    if (data.needs_remediation && data.focused_learning) {
+        const focused = data.focused_learning;
+        focusedBox.style.display = "block";
+        focusedBox.innerHTML = `
+            <h3>Focused Revision (Weak Areas)</h3>
+            <p><b>${focused.title || "Focused Notes"}</b></p>
+            <p>${focused.summary || ""}</p>
+            <h4>Key Concepts</h4>
+            <ul>${(focused.key_concepts || []).map((x) => `<li>${x}</li>`).join("")}</ul>
+            <h4>Learning Tips</h4>
+            <ul>${(focused.learning_tips || []).map((x) => `<li>${x}</li>`).join("")}</ul>
+            <button type="button" onclick="window.location='/quiz'">Retake Focused Quiz</button>
+            <button type="button" onclick="window.location='/dashboard'" style="margin-left:10px;">Go to Dashboard</button>
+        `;
+        return;
+    }
+
+    resultEl.innerHTML += "<br><br>Redirecting to dashboard...";
+    setTimeout(() => {
+        window.location = "/dashboard";
+    }, 2500);
+}
+</script>
+
+</body>
+</html>

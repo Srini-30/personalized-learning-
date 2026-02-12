@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Topic Tutor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+body{
+    margin:0;
+    font-family: Arial;
+    background:#0b132b;
+    color:white;
+}
+
+/* MAIN GRID */
+.container{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+    background:#070f24;
+    padding:25px;
+}
+
+.sidebar h2{
+    margin-bottom:20px;
+}
+
+.sidebar a{
+    color:#7aa2ff;
+    text-decoration:none;
+}
+
+/* RIGHT AREA */
+.main{
+    padding:40px;
+    overflow-y:auto;
+}
+
+/* INPUT ROW */
+.input-row{
+    display:flex;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+input, select{
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    font-size:16px;
+}
+
+input{
+    width:300px;
+}
+
+button{
+    background:#22c55e;
+    border:none;
+    padding:12px 20px;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#16a34a;
+}
+
+.card{
+    background:#111c44;
+    padding:25px;
+    border-radius:14px;
+    margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="sidebar">
+        <h2>AI Tutor</h2>
+        <a href="/dashboard">⬅ Dashboard</a>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="main">
+
+        <h1>Learn Any Topic</h1>
+
+        <div class="input-row">
+            <input id="topic" placeholder="Enter topic...">
+
+            <select id="level">
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+            </select>
+
+            <button id="btn" onclick="generate()">Generate</button>
+        </div>
+
+        <p id="loading" style="display:none;">
+            ⏳ Generating AI lesson...
+        </p>
+
+        <div id="output"></div>
+
+    </div>
+</div>
+
+
+<script>
+
+async function generate(){
+
+    const btn = document.getElementById("btn");
+    btn.disabled = true;
+
+    const topic = document.getElementById("topic").value;
+    const level = document.getElementById("level").value;
+
+    document.getElementById("loading").style.display="block";
+
+    const res = await fetch("/api/topic",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            topic,
+            level
+        })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("loading").style.display="none";
+    btn.disabled = false;
+
+    document.getElementById("output").innerHTML = `
+        <div class="card">
+            <h2>${data.title}</h2>
+            <p>${data.summary}</p>
+
+            <h3>Key Concepts</h3>
+            <ul>${data.key_concepts.map(c=>`<li>${c}</li>`).join("")}</ul>
+
+            <h3>Definitions</h3>
+            <ul>${data.definitions.map(d=>`<li>${d}</li>`).join("")}</ul>
+
+            <h3>Examples</h3>
+            <ul>${data.examples.map(e=>`<li>${e}</li>`).join("")}</ul>
+
+            <h3>Learning Tips</h3>
+            <ul>${data.learning_tips.map(t=>`<li>${t}</li>`).join("")}</ul>
+
+            <br>
+            <a href="/quiz">
+                <button>Take Quiz</button>
+            </a>
+        </div>
+    `;
+}
+
+</script>
+
+</body>
+</html>

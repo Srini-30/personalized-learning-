@@ -1,0 +1,7 @@
+flask
+faster-whisper
+yt-dlp
+requests
+python-dotenv
+wikipedia
+pydantic
