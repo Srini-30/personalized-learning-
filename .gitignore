@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+
+# Runtime/generated app data
+work_ytdl/
+output_transcript/
+output_notes/
+
+# Local runtime state
+quiz_scores.json
+users.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
