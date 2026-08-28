@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Topic Explainer Video | AI Study Buddy</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="page">
+    <header style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div>
+        <h1>Topic to Explainer Video</h1>
+        <p class="small">Enter a topic to generate narration + animated explainer video.</p>
+      </div>
+      <a href="{{ url_for('dashboard') }}" class="btn-secondary">Back</a>
+    </header>
+
+    <section class="card">
+      <label for="explainer-topic">Topic</label>
+      <div class="input-row-simple">
+        <input id="explainer-topic" type="text" placeholder="e.g. Neural Networks" />
+        <button id="explainer-generate" type="button">Generate Video</button>
+      </div>
+      <div id="explainer-status" class="status"></div>
+
+      <div class="divider"></div>
+
+      <div id="explainer-result" class="hidden">
+        <h3 id="explainer-title"></h3>
+        <p id="explainer-script"></p>
+        <video id="explainer-video" class="explainer-video" controls preload="metadata"></video>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const topicEl = document.getElementById("explainer-topic");
+    const btnEl = document.getElementById("explainer-generate");
+    const statusEl = document.getElementById("explainer-status");
+    const resultEl = document.getElementById("explainer-result");
+    const titleEl = document.getElementById("explainer-title");
+    const scriptEl = document.getElementById("explainer-script");
+    const videoEl = document.getElementById("explainer-video");
+
+    btnEl.addEventListener("click", async () => {
+      const topic = (topicEl.value || "").trim();
+      if (!topic) {
+        statusEl.textContent = "Enter a topic.";
+        return;
+      }
+
+      btnEl.disabled = true;
+      resultEl.classList.add("hidden");
+      statusEl.textContent = "Generating explanation, audio, and video. This may take a minute...";
+
+      try {
+        const res = await fetch("/api/explainer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to generate explainer");
+
+        titleEl.textContent = data.topic;
+        scriptEl.textContent = data.script;
+        videoEl.src = data.video_url;
+        resultEl.classList.remove("hidden");
+        statusEl.textContent = "Explainer video generated.";
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      } finally {
+        btnEl.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -9,53 +9,83 @@
 <body>
   <div class="page auth-page">
     <section class="card auth-card">
-      <h1 style="margin-bottom: 0.5rem;">Register</h1>
-      <p class="small" style="margin-bottom: 1rem;">
-        Create a new account to use the dashboard.
-      </p>
+      <h1 class="auth-title">Register</h1>
+      <p class="small auth-subtitle">Create your account</p>
 
       {% if error %}
-      <div class="status err" style="margin-bottom: 8px;">{{ error }}</div>
+      <div class="status err auth-error">{{ error }}</div>
       {% endif %}
 
-      <form method="POST" action="{{ url_for('register') }}">
+      <form method="POST" action="{{ url_for('register') }}" class="auth-form">
         <label for="username">Username</label>
         <input
           id="username"
           name="username"
           type="text"
           placeholder="Pick a username"
+          autocomplete="username"
           required
         />
 
-        <label for="password" style="margin-top: 8px;">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Choose a password"
-          required
-        />
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Choose a password"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-toggle-password="password"
+            aria-label="Show password"
+            title="Show password"
+          >&#128065;</button>
+        </div>
 
-        <label for="confirm" style="margin-top: 8px;">Confirm Password</label>
-        <input
-          id="confirm"
-          name="confirm"
-          type="password"
-          placeholder="Re-type password"
-          required
-        />
+        <label for="confirm">Confirm Password</label>
+        <div class="password-wrap">
+          <input
+            id="confirm"
+            name="confirm"
+            type="password"
+            placeholder="Re-type password"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-toggle-password="confirm"
+            aria-label="Show password"
+            title="Show password"
+          >&#128065;</button>
+        </div>
 
-        <button type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">
-          ✨ Register
-        </button>
+        <button type="submit" class="auth-submit">Register</button>
       </form>
 
-      <div class="small" style="margin-top: 12px; text-align:center;">
+      <div class="small auth-footer">
         Already have an account?
         <a href="{{ url_for('login') }}">Back to login</a>
       </div>
     </section>
   </div>
+  <script>
+    document.querySelectorAll("[data-toggle-password]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.togglePassword);
+        if (!input) return;
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        btn.classList.toggle("active", show);
+        btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        btn.setAttribute("title", show ? "Hide password" : "Show password");
+      });
+    });
+  </script>
 </body>
 </html>

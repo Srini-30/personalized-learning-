@@ -3,6 +3,8 @@ import io
 import json
 import time
 import shutil
+import subprocess
+import tempfile
 import concurrent.futures
 import http.client
 import wikipedia
@@ -13,7 +15,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, redirect, session
+from flask import Flask, request, jsonify, render_template, redirect, session, url_for, send_from_directory
 from dotenv import load_dotenv
 from google import genai
 from pydantic import BaseModel
@@ -40,7 +42,8 @@ client = genai.Client(api_key=API_KEY)
 # FLASK
 # ===============================
 app = Flask(__name__)
-app.secret_key = SECRET_KEY or os.urandom(24)
+# Use a stable fallback in development so debug reloads do not invalidate session cookies.
+app.secret_key = SECRET_KEY or "dev-secret-change-me"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 
@@ -375,6 +378,7 @@ def get_fast_transcript(url):
     audio_stream = get_audio_stream(url, info=info)
     return transcribe(audio_stream, max_seconds=max_seconds), "whisper"
 
+
 # ===============================
 # Wikipedia and google books
 # ===============================
@@ -450,11 +454,7 @@ def build_context(topic: str, wiki: str = "", books: str = "") -> str:
 
     {books}
     """
-
-    # 🔥 Prevent token explosion
     return context[:12000]
-
-
 
 
 # ===============================
@@ -680,12 +680,341 @@ def generate_focused_learning(
 
 
 # ===============================
+# EXPLAINER VIDEO
+# ===============================
+EXPLAINER_ROOT = Path("work/explainers")
+
+
+def _slugify_topic(topic: str) -> str:
+    cleaned = re.sub(r"[^\w\s-]", "", (topic or "").strip().lower())
+    cleaned = re.sub(r"[-\s]+", "_", cleaned)
+    return cleaned or "topic"
+
+
+def generate_explanation(topic: str) -> str:
+    prompt = f"""
+    Create a deeper explainer script for topic: "{topic}".
+
+    Requirements:
+    - Audience: beginner to intermediate learner.
+    - Length: about 130 to 180 words.
+    - Structure in plain text paragraphs:
+      1) Core idea and intuition
+      2) Step-by-step working/mechanism
+      3) One practical real-world example + one limitation
+    - Keep language simple but conceptually deep.
+    - Avoid bullet points, markdown, and headings.
+    - Write for spoken narration in a video.
+    """
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=prompt,
+        )
+        text = (response.text or "").strip()
+        if text:
+            return text
+    except Exception:
+        pass
+
+    return (
+        f"{topic} is a practical concept used to solve real-world problems efficiently. "
+        f"The core idea is to break a difficult task into clear steps and make decisions using useful signals. "
+        f"In most systems, the process starts with inputs, applies a method, and checks output quality before repeating. "
+        f"This loop helps improve accuracy and reliability over time. "
+        f"For example, teams can use {topic} in routing, prediction, or automation workflows to save time and reduce errors. "
+        f"A key limitation is that poor assumptions or noisy data can reduce performance, "
+        f"so testing and validation are important before production use."
+    )
+
+
+def generate_audio(text: str, out_dir: Path) -> Path:
+    try:
+        from gtts import gTTS
+    except Exception as e:
+        raise RuntimeError("gTTS is not installed. Run: pip install gTTS") from e
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    audio_path = out_dir / "audio.mp3"
+    tts = gTTS(text=text, lang="en")
+    tts.save(audio_path)
+    wav_path = out_dir / "audio.wav"
+
+    ffmpeg_cmd = shutil.which("ffmpeg")
+    if ffmpeg_cmd:
+        run = subprocess.run(
+            [
+                ffmpeg_cmd,
+                "-y",
+                "-i",
+                str(audio_path),
+                "-ar",
+                "22050",
+                "-ac",
+                "1",
+                str(wav_path),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if run.returncode == 0 and wav_path.exists():
+            return wav_path
+
+    return audio_path
+
+
+def _write_manim_scene(topic_slug: str) -> Path:
+    scene_code = """
+import os
+import re
+import textwrap
+from pathlib import Path
+from manim import *
+
+class ExplainerVideo(Scene):
+    def _sentences(self, text):
+        return [s.strip() for s in re.split(r"(?<=[.!?])\\s+", text) if s.strip()]
+
+    def _section_chunks(self, sentences):
+        if not sentences:
+            return [
+                ("Core Idea", ["No explanation content available."]),
+                ("How It Works", []),
+                ("Example and Limits", []),
+            ]
+
+        labels = ["Core Idea", "How It Works", "Example and Limits"]
+        section_size = max(1, (len(sentences) + 2) // 3)
+        sections = []
+        for idx, label in enumerate(labels):
+            start = idx * section_size
+            end = (idx + 1) * section_size
+            chunk = sentences[start:end]
+            if idx == 2 and end < len(sentences):
+                chunk = sentences[start:]
+            sections.append((label, chunk))
+        return sections
+
+    def _visual_for_section(self, idx):
+        # Simple topic-agnostic animated visuals for each content section.
+        if idx == 0:
+            core = Circle(radius=0.45, color=YELLOW, stroke_width=4)
+            nodes = VGroup(
+                Dot([-1.3, -0.1, 0], color=BLUE_B),
+                Dot([1.3, -0.1, 0], color=BLUE_B),
+                Dot([0, -1.2, 0], color=BLUE_B),
+            )
+            links = VGroup(
+                Line(core.get_center(), nodes[0].get_center(), color=BLUE_D),
+                Line(core.get_center(), nodes[1].get_center(), color=BLUE_D),
+                Line(core.get_center(), nodes[2].get_center(), color=BLUE_D),
+            )
+            return VGroup(links, core, nodes)
+
+        if idx == 1:
+            b1 = RoundedRectangle(width=1.5, height=0.65, corner_radius=0.12, color=GREEN_C)
+            b2 = RoundedRectangle(width=1.5, height=0.65, corner_radius=0.12, color=GREEN_C)
+            b3 = RoundedRectangle(width=1.5, height=0.65, corner_radius=0.12, color=GREEN_C)
+            flow = VGroup(b1, b2, b3).arrange(DOWN, buff=0.35)
+            arrows = VGroup(
+                Arrow(b1.get_bottom(), b2.get_top(), buff=0.04, stroke_width=3, color=GREEN_B),
+                Arrow(b2.get_bottom(), b3.get_top(), buff=0.04, stroke_width=3, color=GREEN_B),
+            )
+            return VGroup(flow, arrows)
+
+        if idx == 2:
+            chart = Axes(
+                x_range=[0, 4, 1],
+                y_range=[0, 5, 1],
+                x_length=3.0,
+                y_length=2.3,
+                axis_config={"color": GREY_B, "include_numbers": False},
+                tips=False,
+            )
+            curve = chart.plot(lambda x: 0.7 + 0.9 * x, color=ORANGE, x_range=[0, 3.6])
+            dots = VGroup(
+                Dot(chart.c2p(0.5, 1.2), color=ORANGE),
+                Dot(chart.c2p(1.7, 2.2), color=ORANGE),
+                Dot(chart.c2p(3.0, 3.4), color=ORANGE),
+            )
+            return VGroup(chart, curve, dots)
+
+        warn = Triangle(color=RED_C, fill_opacity=0.2).scale(0.7)
+        warn_text = Text("!", font_size=42, color=RED_B).move_to(warn.get_center())
+        shield = RoundedRectangle(width=1.8, height=2.2, corner_radius=0.2, color=TEAL_C)
+        shield.next_to(warn, RIGHT, buff=0.35)
+        return VGroup(warn, warn_text, shield)
+
+    def construct(self):
+        current_project = Path(os.getenv("CURRENT_PROJECT", "."))
+        audio_file = current_project / "audio.wav"
+        if not audio_file.exists():
+            audio_file = current_project / "audio.mp3"
+        explanation_file = current_project / "script.txt"
+
+        explanation = explanation_file.read_text(encoding="utf-8") if explanation_file.exists() else "No explanation found."
+        sentences = self._sentences(explanation)
+        sections = self._section_chunks(sentences)
+
+        bg = Rectangle(
+            width=config.frame_width,
+            height=config.frame_height,
+            fill_color="#0b1d4f",
+            fill_opacity=1,
+            stroke_width=0,
+        )
+        self.add(bg)
+
+        glow = Circle(radius=2.6, fill_color="#1d4ed8", fill_opacity=0.12, stroke_width=0).shift(UP * 0.9 + LEFT * 2.5)
+        self.add(glow)
+
+        topic_name = current_project.name.replace("_", " ")
+        title = Text(topic_name, font_size=50, color=YELLOW).to_edge(UP).shift(DOWN * 0.2)
+        subtitle = Text("Animated explainer", font_size=23, color=GREY_A).next_to(title, DOWN, buff=0.12)
+        divider = Line(LEFT * 5.3, RIGHT * 5.3, color=BLUE_D, stroke_opacity=0.45).next_to(subtitle, DOWN, buff=0.2)
+
+        timeline = NumberLine(
+            x_range=[0, 3, 1],
+            length=6.2,
+            include_ticks=False,
+            include_numbers=False,
+            color=GREY_B,
+        ).next_to(divider, DOWN, buff=0.28)
+        progress_dot = Dot(timeline.number_to_point(0), radius=0.08, color=YELLOW)
+
+        self.play(Write(title))
+        self.play(FadeIn(subtitle, shift=UP), run_time=0.8)
+        self.play(Create(divider), FadeIn(timeline), FadeIn(progress_dot), run_time=0.8)
+
+        if audio_file.exists():
+            self.add_sound(str(audio_file))
+
+        total_words = max(1, len(explanation.split()))
+        est_total_seconds = max(20.0, min(65.0, total_words * 0.33))
+        per_section_wait = max(2.8, est_total_seconds / max(1, len(sections)))
+
+        card = RoundedRectangle(
+            width=10.9,
+            height=4.8,
+            corner_radius=0.22,
+            fill_color="#0f2a5f",
+            fill_opacity=0.55,
+            stroke_color=BLUE_C,
+            stroke_opacity=0.45,
+            stroke_width=2,
+        ).next_to(timeline, DOWN, buff=0.32)
+        self.play(FadeIn(card, shift=UP), run_time=0.9)
+
+        active_group = None
+        for idx, (label, chunk) in enumerate(sections):
+            sec_title = Text(label, font_size=31, color=TEAL_A).move_to(card.get_top() + DOWN * 0.45)
+            visual = self._visual_for_section(idx).scale(0.85).move_to(card.get_left() + RIGHT * 2.0 + DOWN * 0.6)
+
+            chunk_text = " ".join(chunk) if chunk else "No additional details provided."
+            wrapped = textwrap.wrap(chunk_text, width=54)
+            wrapped = wrapped[:5]
+            lines = VGroup(*[
+                Text(f"- {line}", font_size=24, color=WHITE)
+                for line in wrapped
+            ]).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
+            lines.next_to(visual, RIGHT, buff=0.65).shift(UP * 0.1)
+
+            section_group = VGroup(sec_title, visual, lines)
+
+            target_x = min(idx + 1, 3)
+            target_point = timeline.number_to_point(target_x)
+
+            if active_group is None:
+                self.play(FadeIn(section_group, shift=UP), run_time=1.2)
+            else:
+                self.play(ReplacementTransform(active_group, section_group), run_time=0.9)
+
+            self.play(progress_dot.animate.move_to(target_point), run_time=0.35)
+            active_group = section_group
+            self.wait(per_section_wait)
+
+        recap = Text("Quick recap complete", font_size=28, color=YELLOW_B).next_to(card, DOWN, buff=0.2)
+        self.play(FadeIn(recap, shift=UP), run_time=0.6)
+        self.wait(0.8)
+"""
+    temp_scene_dir = Path(tempfile.gettempdir()) / "ai_study_buddy_manim"
+    temp_scene_dir.mkdir(parents=True, exist_ok=True)
+    scene_file = temp_scene_dir / f"vid_{topic_slug}.py"
+    scene_file.write_text(scene_code, encoding="utf-8")
+    return scene_file
+
+
+def generate_explainer(topic: str) -> Dict[str, Any]:
+    manim_cmd = shutil.which("manim")
+    if not manim_cmd:
+        raise RuntimeError("manim is not installed or not in PATH.")
+
+    slug = _slugify_topic(topic)
+    topic_dir = EXPLAINER_ROOT / slug
+    topic_dir.mkdir(parents=True, exist_ok=True)
+
+    explanation = generate_explanation(topic)
+    script_file = topic_dir / "script.txt"
+    script_file.write_text(explanation, encoding="utf-8")
+
+    generate_audio(explanation, topic_dir)
+    scene_file = _write_manim_scene(slug)
+
+    env = dict(os.environ)
+    env["CURRENT_PROJECT"] = str(topic_dir.resolve())
+
+    run = subprocess.run(
+        [
+            manim_cmd,
+            "-ql",
+            "--fps",
+            "18",
+            str(scene_file),
+            "ExplainerVideo",
+            "-o",
+            "explainer",
+            "--media_dir",
+            str(topic_dir),
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    if run.returncode != 0:
+        err = (run.stderr or run.stdout or "").strip()
+        raise RuntimeError(f"Manim render failed: {err}")
+
+    videos = sorted(
+        topic_dir.glob("videos/**/explainer.mp4"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not videos:
+        raise RuntimeError("Explainer video file was not created.")
+
+    public_video = topic_dir / "explainer.mp4"
+    shutil.copyfile(videos[0], public_video)
+
+    return {
+        "topic": topic,
+        "slug": slug,
+        "script": explanation,
+        "video_path": public_video,
+    }
+
+
+# ===============================
 # ROOT
 # ===============================
 
 @app.route("/")
 def root():
     return redirect("/dashboard") if require_login() else redirect("/login")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return ("", 204)
 
 
 # ===============================
@@ -795,6 +1124,15 @@ def youtube_page():
         return redirect("/login")
 
     return render_template("youtube.html", user=session["user"])
+
+
+@app.route("/explainer")
+def explainer_page():
+
+    if not require_login():
+        return redirect("/login")
+
+    return render_template("explainer.html", user=session["user"])
 
 
 @app.route("/quiz")
@@ -908,6 +1246,35 @@ def youtube_notes_api():
         return jsonify({"error": f"Failed to generate notes: {str(e)}"}), 500
 
 
+@app.route("/api/explainer", methods=["POST"])
+def explainer_api():
+    try:
+        if not require_login():
+            return jsonify({"error": "Unauthorized"}), 401
+
+        topic = (request.json.get("topic") or "").strip()
+        if not topic:
+            return jsonify({"error": "Topic is required."}), 400
+
+        result = generate_explainer(topic)
+
+        return jsonify({
+            "topic": result["topic"],
+            "script": result["script"],
+            "video_url": url_for("explainer_media", slug=result["slug"], filename="explainer.mp4"),
+        })
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate explainer video: {str(e)}"}), 500
+
+
+@app.route("/media/explainer/<slug>/<path:filename>")
+def explainer_media(slug, filename):
+    if not require_login():
+        return redirect("/login")
+    base = EXPLAINER_ROOT / _slugify_topic(slug)
+    return send_from_directory(base, filename)
+
+
 # ===============================
 # QUIZ
 # ===============================
@@ -978,4 +1345,4 @@ def submit_quiz():
 # ===============================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

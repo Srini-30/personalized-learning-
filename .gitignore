@@ -1,5 +1,6 @@
 .env
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 
@@ -7,6 +8,8 @@ __pycache__/
 work_ytdl/
 output_transcript/
 output_notes/
+work/
+static/generated/
 
 # Local runtime state
 quiz_scores.json

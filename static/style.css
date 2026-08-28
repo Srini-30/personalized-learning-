@@ -16,6 +16,7 @@ body {
   max-width: 1200px;
   width: 100%;
   padding: 24px;
+  padding-bottom: 110px;
   margin: 0 auto;
 }
 
@@ -97,6 +98,7 @@ label {
 }
 
 input[type="text"],
+input[type="password"],
 select {
   width: 100%;
   padding: 10px;   /* fixed missing px bug */
@@ -180,10 +182,20 @@ button:disabled {
     margin-bottom:14px;
 }
 .quiz-cta{
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 1000;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align:center;
-    margin-top:10px;
+}
+
+.quiz-cta #quizBtn{
+    margin-top: 0;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
 }
 
 .download-row{
@@ -220,19 +232,58 @@ button:disabled {
   flex-direction: column;
   background: radial-gradient(circle at top left, #22c55e22, #020617);
   border-radius: 16px;
-  padding: 14px 16px;
-  min-width: 230px;
+  padding: 9px 14px;
+  min-width: 260px;
   text-decoration: none;
   color: #e5e7eb;
   border: 1px solid rgba(148, 163, 184, 0.5);
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-align: left;
 }
 
 .choice-btn span {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #9ca3af;
-  margin-top: 4px;
+  margin-top: 3px;
+}
+
+.choice-btn .mode-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+  color: #e5e7eb;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.choice-btn .mode-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  font-size: 0.95rem;
+}
+
+.choice-btn .mode-icon-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.choice-btn .mode-icon-plain {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.choice-btn .mode-icon-svg {
+  width: 17px;
+  height: 17px;
+  display: block;
 }
 
 .choice-btn:hover {
@@ -240,13 +291,206 @@ button:disabled {
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
 }
 
+.dashboard-header h1 {
+  font-size: 2.1rem;
+}
+
+.dashboard-header p {
+  font-size: 1.03rem;
+}
+
+.dashboard-header .btn-secondary {
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+
+.dashboard-modes {
+  padding: 22px 22px;
+}
+
+.dashboard-modes h2 {
+  font-size: 1.35rem;
+  margin-bottom: 14px;
+}
+
+.dashboard-mode-row {
+  gap: 22px;
+}
+
+.dashboard-mode-row .choice-btn {
+  min-height: 76px;
+}
+
+.dashboard-mode-row .choice-btn > span:last-child {
+  font-size: 0.85rem;
+}
+
+.dashboard-scorecard {
+  min-height: 96px;
+  padding: 20px 22px;
+}
+
+.dashboard-scorecard h2 {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.dashboard-scorecard p {
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
 /* Auth Pages */
 .auth-page {
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .auth-card {
-  max-width: 360px;
-  margin: 60px auto 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 20px auto 0;
+  padding: 28px;
+  background: linear-gradient(160deg, #0f1e4a, #13245c);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 22px 48px rgba(2, 6, 23, 0.45);
 }
+
+.auth-title {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.2px;
+}
+
+.auth-subtitle {
+  margin: 6px 0 14px 0;
+  color: #9fb0cf;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-form label {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  background: rgba(8, 18, 46, 0.78);
+  color: #f8fafc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-form input[type="text"]::placeholder,
+.auth-form input[type="password"]::placeholder {
+  color: #8fa3c7;
+}
+
+.auth-form input[type="text"]:focus,
+.auth-form input[type="password"]:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  background: rgba(8, 18, 46, 0.95);
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input[type="password"],
+.password-wrap input[type="text"] {
+  padding-right: 46px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.password-toggle.active {
+  color: #67e8f9;
+  border-color: #67e8f9;
+}
+
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+  padding: 11px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.auth-error {
+  margin-bottom: 10px;
+  color: #fecaca;
+}
+
+.auth-footer {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.auth-footer a {
+  color: #7dd3fc;
+}
+
+.quiz-history-page {
+  background: linear-gradient(180deg, #1d2f63 0%, #263f7f 55%, #2f4f94 100%);
+}
+
+.input-row-simple {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-row-simple input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.status {
+  margin-top: 10px;
+  color: #cbd5e1;
+}
+
+.explainer-video {
+  width: 100%;
+  max-width: 960px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #020617;
+}
+

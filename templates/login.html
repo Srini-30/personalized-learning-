@@ -9,47 +9,64 @@
 <body>
   <div class="page auth-page">
     <section class="card auth-card">
-      <h1 style="margin-bottom: 0.5rem;">Login</h1>
-      <p class="small" style="margin-bottom: 1rem;">
-        SIGN IN
-      </p>
+      <h1 class="auth-title">Login</h1>
+      <p class="small auth-subtitle">Sign in to continue</p>
 
       {% if error %}
-      <div class="status err" style="margin-bottom: 8px;">{{ error }}</div>
+      <div class="status err auth-error">{{ error }}</div>
       {% endif %}
 
-      <form method="POST" action="{{ url_for('login') }}">
+      <form method="POST" action="{{ url_for('login') }}" class="auth-form">
         <label for="username">Username</label>
         <input
           id="username"
           name="username"
           type="text"
-          placeholder="student"
+          placeholder="Enter username"
+          autocomplete="username"
           required
         />
 
-        <label for="password" style="margin-top: 8px;">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="••••••••"
-          required
-        />
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-toggle-password="password"
+            aria-label="Show password"
+            title="Show password"
+          >&#128065;</button>
+        </div>
 
-        <button type="submit" style="width: 100%; justify-content: center; margin-top: 14px;">
-          Login
-        </button>
+        <button type="submit" class="auth-submit">Login</button>
       </form>
 
-      <div class="small" style="margin-top: 12px; text-align:center;">
-        <br />
-        <span style="display:block; margin-top:6px;">
-          New here?
-          <a href="{{ url_for('register') }}">Create an account</a>
-        </span>
+      <div class="small auth-footer">
+        New here?
+        <a href="{{ url_for('register') }}">Create an account</a>
       </div>
     </section>
   </div>
+  <script>
+    document.querySelectorAll("[data-toggle-password]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.togglePassword);
+        if (!input) return;
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        btn.classList.toggle("active", show);
+        btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        btn.setAttribute("title", show ? "Hide password" : "Show password");
+      });
+    });
+  </script>
 </body>
 </html>

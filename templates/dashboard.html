@@ -9,44 +9,71 @@
 <body>
 <div class="page">
 
-<header style="display:flex; justify-content: space-between; align-items:center;">
-
+<header class="dashboard-header" style="display:flex; justify-content: space-between; align-items:center;">
 <div>
 <h1>AI Study Buddy Dashboard</h1>
 <p>Welcome, <b>{{ user }}</b></p>
 </div>
-
 <a href="/logout" class="btn-secondary">Logout</a>
-
 </header>
 
-
-
-<!-- LEARNING MODES -->
-<section class="card" style="text-align:center;">
+<section class="card dashboard-modes" style="text-align:center;">
 <h2>Choose a Mode to Learn</h2>
 
-<div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-
+<div class="dashboard-mode-row" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
 <a href="{{ url_for('youtube_page') }}" class="choice-btn">
- YouTube → Content Notes
+ <span class="mode-title">
+  <span class="mode-icon mode-icon-plain" aria-hidden="true">
+   <svg viewBox="0 0 24 24" class="mode-icon-svg" role="img" aria-label="YouTube">
+    <rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000"></rect>
+    <polygon points="10,9 16,12 10,15" fill="#ffffff"></polygon>
+   </svg>
+  </span>
+  YouTube -> Content Notes
+ </span>
 <span>Generate notes + quiz</span>
 </a>
 
 <a href="{{ url_for('topic_page') }}" class="choice-btn">
- Topic → Content Notes
+ <span class="mode-title">
+  <span class="mode-icon mode-icon-plain" aria-hidden="true">
+   <svg viewBox="0 0 24 24" class="mode-icon-svg" role="img" aria-label="Topic Notes">
+    <rect x="3" y="3" width="12" height="18" rx="2" fill="#f8fafc"></rect>
+    <rect x="3" y="3" width="12" height="4" rx="2" fill="#f43f5e"></rect>
+    <rect x="5" y="9" width="8" height="1.4" rx="0.7" fill="#0f172a"></rect>
+    <rect x="5" y="12" width="6.5" height="1.4" rx="0.7" fill="#0f172a"></rect>
+    <rect x="5" y="15" width="7.5" height="1.4" rx="0.7" fill="#0f172a"></rect>
+    <polygon points="11,16 17.5,9.5 20.5,12.5 14,19 10.5,19.5" fill="#ef4444"></polygon>
+    <polygon points="17.5,9.5 18.8,8.2 21.8,11.2 20.5,12.5" fill="#eab308"></polygon>
+   </svg>
+  </span>
+  Topic -> Content Notes
+ </span>
 <span>Learn anything instantly</span>
 </a>
 
+<a href="{{ url_for('explainer_page') }}" class="choice-btn">
+ <span class="mode-title">
+  <span class="mode-icon mode-icon-plain" aria-hidden="true">
+   <svg viewBox="0 0 24 24" class="mode-icon-svg" role="img" aria-label="Explainer Video">
+    <rect x="2" y="4" width="14" height="16" rx="3" fill="#f27b84"></rect>
+    <polygon points="10,9 10,15 14,12" fill="#f8fafc"></polygon>
+    <polygon points="16,9 22,6 22,18 16,15" fill="#cf5f67"></polygon>
+   </svg>
+  </span>
+  Topic -> Explainer Video
+ </span>
+<span>Generate narrated video</span>
+</a>
 </div>
 </section>
 
-
-<!-- QUIZ HISTORY -->
 <a href="/quiz_history" style="text-decoration:none; color:inherit;">
-<section class="card" style="cursor:pointer;">
-<h2>Your Quiz Scorecard →</h2>
+<section class="card dashboard-scorecard" style="cursor:pointer;">
+<h2>Your Quiz Scorecard -></h2>
 <p>Click to view detailed results</p>
+</section>
+</a>
 
 </div>
 </body>
